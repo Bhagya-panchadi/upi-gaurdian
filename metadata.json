@@ -1,0 +1,7 @@
+{
+  "name": "UPI Guardian",
+  "description": "Understand the scam. Protect your payment. An AI-powered user-side payment safety assistant for UPI payments.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
