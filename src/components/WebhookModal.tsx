@@ -41,10 +41,7 @@ export const WebhookModal: React.FC<WebhookModalProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: 25000,
-          receiver_upi_id: 'sbi.test@okhdfcbank',
-          payment_message: 'Verification test ping from UPI Guardian',
-          is_new_receiver: true,
+          input: 'Test verification message: Your bank account will be blocked today. Pay ₹25,000 immediately.',
         }),
       });
 
@@ -59,26 +56,9 @@ export const WebhookModal: React.FC<WebhookModalProps> = ({
   };
 
   const sampleJson = `{
-  "overall_risk_level": "HIGH",
-  "risk_score": 92,
-  "scam_type": "Bank Impersonation Scam",
-  "why_risky": [
-    "Unknown receiver",
-    "Urgent threat",
-    "Payment requested for verification"
-  ],
-  "explanation": "This request may be impersonating a bank and using urgency to make the user pay.",
-  "recommended_action": "DONT_PAY",
-  "safety_tips": [
-    "Do not share OTP or PIN",
-    "Verify through the official bank channel"
-  ],
-  "scam_steps": [
-    "Impersonates a bank",
-    "Creates urgency",
-    "Requests payment"
-  ]
+  "result": "**Risk Level:** High Risk\\n\\n**Reason:** This is a classic \\"Urgency Scam.\\" Banks never ask you to pay money to \\"verify\\" your account or prevent it from being blocked...\\n\\n**Safety Advice:**\\n* **Do NOT pay any money.**\\n* **Do NOT click on any links**...\\n* **Verify independently:**..."
 }`;
+
 
   const copySample = () => {
     navigator.clipboard.writeText(sampleJson);
@@ -117,7 +97,7 @@ export const WebhookModal: React.FC<WebhookModalProps> = ({
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://primary-production-xxxx.up.railway.app/webhook/analyze-upi"
+              placeholder="https://bhagya4478.app.n8n.cloud/webhook/upi-guardian-analyze"
               className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-cyan-400"
             />
             <p className="text-[11px] text-slate-400 mt-1">

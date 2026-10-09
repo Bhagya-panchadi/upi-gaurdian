@@ -37,6 +37,7 @@ export const PaymentLinkChecker: React.FC<PaymentLinkCheckerProps> = ({
     }
 
     const payload: PaymentData = {
+      input: linkInput.trim(),
       payment_link: linkInput.trim(),
       amount,
       receiver_upi_id: upiId,

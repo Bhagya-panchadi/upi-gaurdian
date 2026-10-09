@@ -3,14 +3,17 @@ export type RecommendedAction = 'PROCEED' | 'VERIFY' | 'DONT_PAY';
 
 export interface AnalysisResponse {
   overall_risk_level: RiskLevel;
-  risk_score: number;
-  scam_type: string;
-  why_risky: string[];
+  risk_level_label: string; // The exact risk label returned by n8n
+  risk_score?: number | null; // Only present if explicitly returned by n8n, never fabricated
+  scam_type?: string;
+  why_risky?: string[];
   explanation: string;
   recommended_action: RecommendedAction;
   safety_tips: string[];
-  scam_steps: string[];
+  scam_steps?: string[];
+  raw_response?: string; // The actual unedited string returned by n8n
 }
+
 
 export interface PaymentData {
   amount?: number | string;

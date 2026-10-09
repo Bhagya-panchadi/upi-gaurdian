@@ -14,6 +14,8 @@ import {
   RefreshCw,
   MessageSquare,
   Lock,
+  Code,
+  Check,
 } from 'lucide-react';
 import { AnalysisResponse, PaymentData } from '../types/guardian';
 import { DontPayModal, VerifyModal, ReportModal } from './ActionModals';
@@ -34,6 +36,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
   const [showDontPayModal, setShowDontPayModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showRawOutput, setShowRawOutput] = useState(false);
 
   const isHighRisk = result.overall_risk_level === 'HIGH';
   const isMediumRisk = result.overall_risk_level === 'MEDIUM';
@@ -77,13 +80,11 @@ export const ResultView: React.FC<ResultViewProps> = ({
           className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Analyze Another Payment
+          Analyze Another Message / Payment
         </button>
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span>Scan ID:</span>
-          <span className="font-mono text-slate-300">
-            UG-{Math.abs(result.risk_score * 317).toString(16).toUpperCase()}
-          </span>
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-slate-300 font-medium">Live n8n AI Agent Result</span>
         </div>
       </div>
 
@@ -94,96 +95,118 @@ export const ResultView: React.FC<ResultViewProps> = ({
         <div className="relative z-10 grid grid-cols-1 md:grid-cols-12 gap-6 items-center border-b border-slate-800/90 pb-6 mb-6">
           
           {/* Status & Scam title */}
-          <div className="md:col-span-8 space-y-2">
+          <div className="md:col-span-7 space-y-2">
             <div className="flex items-center gap-2">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-extrabold border ${themeColors.badgeBg}`}>
                 {isHighRisk && <ShieldAlert className="w-3.5 h-3.5" />}
                 {isMediumRisk && <AlertTriangle className="w-3.5 h-3.5" />}
                 {isLowRisk && <ShieldCheck className="w-3.5 h-3.5" />}
-                {result.overall_risk_level} RISK
+                {result.risk_level_label || `${result.overall_risk_level} RISK`}
               </span>
               <span className="text-xs text-slate-500">·</span>
-              <span className="text-xs text-slate-400">Cognitive Risk Assessment</span>
+              <span className="text-xs text-slate-400">n8n Security Evaluation</span>
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-slate-400 font-medium">Possible Scam Type</p>
+              <p className="text-xs text-slate-400 font-medium">Detected Threat Type</p>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {result.scam_type}
+                {result.scam_type || result.risk_level_label}
               </h1>
             </div>
 
+            {paymentData?.raw_message && (
+              <p className="text-xs text-slate-300 bg-slate-950/70 p-3 rounded-xl border border-slate-800 mt-2 leading-relaxed">
+                <span className="text-slate-400 font-semibold block mb-0.5">Analyzed Message:</span>
+                "{paymentData.raw_message}"
+              </p>
+            )}
+
             {paymentData?.receiver_upi_id && (
-              <p className="text-xs text-slate-400 font-mono">
-                Flagged Payee: <span className="text-slate-200 font-semibold">{paymentData.receiver_upi_id}</span>
+              <p className="text-xs text-slate-400 font-mono mt-1">
+                Target Payee: <span className="text-slate-200 font-semibold">{paymentData.receiver_upi_id}</span>
                 {paymentData.amount && <span> · Requested: ₹{Number(paymentData.amount).toLocaleString('en-IN')}</span>}
               </p>
             )}
           </div>
 
-          {/* Risk Score Circle Display */}
-          <div className="md:col-span-4 flex items-center justify-start md:justify-end">
-            <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
-              <div className="relative w-20 h-20 flex items-center justify-center">
-                <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 36 36">
-                  {/* Background track */}
-                  <path
-                    className="text-slate-800"
-                    strokeWidth="3.5"
-                    stroke="currentColor"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                  {/* Progress stroke */}
-                  <path
-                    stroke={themeColors.progressStroke}
-                    strokeWidth="3.5"
-                    strokeDasharray={`${result.risk_score}, 100`}
-                    strokeLinecap="round"
-                    fill="none"
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className={`text-xl font-extrabold font-mono tabular-nums ${themeColors.scoreColor}`}>
-                    {result.risk_score}
+          {/* Risk Level / Score Display (Never fabricated) */}
+          <div className="md:col-span-5 flex items-center justify-start md:justify-end">
+            {result.risk_score !== null && result.risk_score !== undefined ? (
+              <div className="flex items-center gap-4 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+                <div className="relative w-20 h-20 flex items-center justify-center">
+                  <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 36 36">
+                    <path
+                      className="text-slate-800"
+                      strokeWidth="3.5"
+                      stroke="currentColor"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                    <path
+                      stroke={themeColors.progressStroke}
+                      strokeWidth="3.5"
+                      strokeDasharray={`${result.risk_score}, 100`}
+                      strokeLinecap="round"
+                      fill="none"
+                      d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className={`text-xl font-extrabold font-mono tabular-nums ${themeColors.scoreColor}`}>
+                      {result.risk_score}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-medium -mt-1">/ 100</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 font-medium block">Assessment</span>
+                  <span className={`text-sm font-bold ${themeColors.text}`}>
+                    {result.risk_level_label}
                   </span>
-                  <span className="text-[10px] text-slate-400 font-medium -mt-1">/ 100</span>
                 </div>
               </div>
-
-              <div>
-                <span className="text-[11px] text-slate-400 font-medium block">Assessment</span>
-                <span className={`text-sm font-bold ${themeColors.text}`}>
-                  {result.risk_score >= 75 ? 'Critical Danger' : result.risk_score >= 40 ? 'Suspicious' : 'Safe Profile'}
-                </span>
+            ) : (
+              <div className="flex items-center gap-3.5 bg-slate-950/80 px-4 py-3.5 rounded-2xl border border-slate-800">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${themeColors.badgeBg}`}>
+                  {isHighRisk && <ShieldAlert className="w-6 h-6 text-red-400" />}
+                  {isMediumRisk && <AlertTriangle className="w-6 h-6 text-amber-400" />}
+                  {isLowRisk && <ShieldCheck className="w-6 h-6 text-emerald-400" />}
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 font-medium block">n8n Classification</span>
+                  <span className={`text-sm font-extrabold tracking-wide ${themeColors.text}`}>
+                    {result.risk_level_label || `${result.overall_risk_level} RISK`}
+                  </span>
+                </div>
               </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Why is this risky? Section (from n8n Reason) */}
+        {result.why_risky && result.why_risky.length > 0 && (
+          <div className="space-y-3 mb-6">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <AlertTriangle className={`w-4 h-4 ${themeColors.text}`} />
+              Why is this risky?
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {result.why_risky.map((reason, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs text-slate-200"
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isHighRisk ? 'bg-red-400' : isMediumRisk ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                  <span className="leading-relaxed">{reason}</span>
+                </div>
+              ))}
             </div>
           </div>
+        )}
 
-        </div>
-
-        {/* Why is this risky? Section */}
-        <div className="space-y-3 mb-6">
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
-            <AlertTriangle className={`w-4 h-4 ${themeColors.text}`} />
-            Why is this risky?
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {result.why_risky.map((reason, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 text-xs text-slate-200"
-              >
-                <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${isHighRisk ? 'bg-red-400' : isMediumRisk ? 'bg-amber-400' : 'bg-emerald-400'}`} />
-                <span>{reason}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* What should you do? (Recommended Action) */}
+        {/* What should you do? (Recommended Action from n8n) */}
         <div className="p-4 sm:p-5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-3 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
             <div>
@@ -192,7 +215,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">Advised Next Step:</span>
+              <span className="text-xs text-slate-400">Advised Action:</span>
               <span
                 className={`px-3 py-1 rounded-lg text-xs font-extrabold tracking-wide ${
                   result.recommended_action === 'DONT_PAY'
@@ -207,41 +230,29 @@ export const ResultView: React.FC<ResultViewProps> = ({
             </div>
           </div>
 
-          {/* Action safety recommendations */}
+          {/* Safety advice points returned by n8n */}
           <div className="space-y-2">
-            {isHighRisk ? (
+            {result.safety_tips && result.safety_tips.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-950/40 border border-red-900/50 text-red-200 font-semibold">
-                  <XCircle className="w-4 h-4 text-red-400 shrink-0" />
-                  <span>Don't pay this request</span>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-950/40 border border-red-900/50 text-red-200 font-semibold">
-                  <Lock className="w-4 h-4 text-red-400 shrink-0" />
-                  <span>Don't share OTP or UPI PIN</span>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200">
-                  <PhoneCall className="w-4 h-4 text-cyan-400 shrink-0" />
-                  <span>Verify through official channels</span>
-                </div>
-                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-200">
-                  <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Report suspicious request</span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-1.5 text-xs text-slate-300">
                 {result.safety_tips.map((tip, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>{tip}</span>
+                  <div
+                    key={idx}
+                    className="flex items-start gap-2.5 p-3 rounded-lg bg-slate-900 border border-slate-800 text-slate-200"
+                  >
+                    <CheckCircle className={`w-4 h-4 mt-0.5 shrink-0 ${isHighRisk ? 'text-red-400' : isMediumRisk ? 'text-amber-400' : 'text-emerald-400'}`} />
+                    <span className="leading-relaxed">{tip}</span>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-300 p-2">
+                {result.recommended_action === 'DONT_PAY' ? "Do not pay or share your UPI PIN." : "Please verify the requester before transferring."}
               </div>
             )}
           </div>
         </div>
 
-        {/* Action Buttons Section */}
+        {/* Action Buttons */}
         <div className="pt-2 border-t border-slate-800 flex flex-wrap items-center gap-3">
           <button
             onClick={() => setShowDontPayModal(true)}
@@ -272,84 +283,77 @@ export const ResultView: React.FC<ResultViewProps> = ({
             className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-colors ml-auto flex items-center gap-1.5"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            Analyze Another Payment
+            Analyze Another
           </button>
         </div>
 
       </div>
 
-      {/* Feature 6: SCAM STORY SECTION ("How the scam works") */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6 sm:p-8 space-y-4">
-        <div>
-          <span className="text-xs font-bold text-cyan-400">Scam Mechanics</span>
-          <h2 className="text-lg font-bold text-white mt-0.5">How the scam works</h2>
-          <p className="text-xs text-slate-400">
-            Fraudsters follow predictable social-engineering sequences. Here is the blueprint of this detected threat:
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-2">
-          {result.scam_steps.map((step, idx) => (
-            <div
-              key={idx}
-              className="p-4 rounded-xl bg-slate-950 border border-slate-800/90 relative flex flex-col justify-between"
-            >
-              <div className="space-y-2">
-                <div className="w-7 h-7 rounded-lg bg-cyan-950/80 border border-cyan-800/80 text-cyan-300 flex items-center justify-center font-bold text-xs font-mono">
-                  {idx + 1}
-                </div>
-                <p className="text-xs font-medium text-slate-200 leading-relaxed">
-                  {step}
-                </p>
-              </div>
-              <div className="mt-3 text-[10px] text-slate-500 font-mono">
-                Step {idx + 1} of {result.scam_steps.length}
-              </div>
+      {/* Feature: AI EXPLANATION / REASON Directly from n8n */}
+      {result.explanation && (
+        <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6 sm:p-8 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-bold text-cyan-400">n8n AI Agent Analysis</span>
+              <h2 className="text-lg font-bold text-white mt-0.5">
+                Why was this flagged?
+              </h2>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Feature 7: AI EXPLANATION ("Why did UPI Guardian flag this?") */}
-      <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6 sm:p-8 space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold text-emerald-400">Plain-English Breakdown</span>
-            <h2 className="text-lg font-bold text-white mt-0.5">
-              Why did UPI Guardian flag this?
-            </h2>
+            <div className="w-8 h-8 rounded-lg bg-cyan-950/60 border border-cyan-800/60 text-cyan-400 flex items-center justify-center">
+              <Sparkles className="w-4 h-4" />
+            </div>
           </div>
-          <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 flex items-center justify-center">
-            <Sparkles className="w-4 h-4" />
+
+          <p className="text-sm text-slate-200 leading-relaxed bg-slate-950/80 p-4 rounded-xl border border-slate-800 whitespace-pre-line">
+            {result.explanation}
+          </p>
+
+          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+            <span className="text-slate-400">
+              Have questions about this request?
+            </span>
+            <button
+              onClick={onOpenChat}
+              className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5 transition-colors"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              Ask Guardian AI
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
+      )}
 
-        <p className="text-sm text-slate-300 leading-relaxed bg-slate-950/80 p-4 rounded-xl border border-slate-800">
-          {result.explanation}
-        </p>
+      {/* Feature: Raw Response from n8n AI Agent (for 100% transparency & testing) */}
+      {result.raw_response && (
+        <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Code className="w-4 h-4 text-cyan-400" />
+              <h3 className="text-xs font-bold text-slate-200">Raw n8n Workflow Output</h3>
+            </div>
+            <button
+              onClick={() => setShowRawOutput(!showRawOutput)}
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
+            >
+              {showRawOutput ? 'Hide Details' : 'View Full Output'}
+            </button>
+          </div>
 
-        {/* Chat prompt preview */}
-        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
-          <span className="text-slate-400">
-            Have questions about this request?
-          </span>
-          <button
-            onClick={onOpenChat}
-            className="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1.5 transition-colors"
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            Ask Guardian AI
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+          {showRawOutput && (
+            <pre className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed overflow-x-auto">
+              {result.raw_response}
+            </pre>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Mandatory Hackathon Disclaimer */}
+      {/* Prototype Disclaimer */}
       <div className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-slate-400 shrink-0" />
           <span>
-            <strong>Hackathon Prototype Disclaimer:</strong> UPI Guardian is an advisory AI safety assistant. It does not directly block or execute real UPI banking transactions. Always confirm independently before paying.
+            <strong>Prototype Disclaimer:</strong> UPI Guardian is an advisory AI assistant. It analyzes request content and does not directly block or execute bank transactions.
           </span>
         </div>
       </div>
@@ -358,7 +362,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       <DontPayModal
         isOpen={showDontPayModal}
         onClose={() => setShowDontPayModal(false)}
-        scamType={result.scam_type}
+        scamType={result.scam_type || result.risk_level_label}
       />
       <VerifyModal
         isOpen={showVerifyModal}
@@ -368,7 +372,7 @@ export const ResultView: React.FC<ResultViewProps> = ({
       <ReportModal
         isOpen={showReportModal}
         onClose={() => setShowReportModal(false)}
-        scamType={result.scam_type}
+        scamType={result.scam_type || result.risk_level_label}
       />
 
     </div>

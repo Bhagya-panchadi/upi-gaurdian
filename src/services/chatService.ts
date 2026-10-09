@@ -13,7 +13,9 @@ export function generateGuardianChatReply(
   // If user asks about current payment risk
   if (p.includes('why') && (p.includes('risky') || p.includes('flagged') || p.includes('danger'))) {
     if (currentAnalysis) {
-      return `Based on our real-time scan, this request was flagged with ${currentAnalysis.risk_score}/100 risk score (${currentAnalysis.overall_risk_level} RISK). Key reasons: ${currentAnalysis.why_risky.join(', ')}. Scammers often use these patterns to bypass personal verification.`;
+      const scoreText = currentAnalysis.risk_score ? `with a ${currentAnalysis.risk_score}/100 score ` : '';
+      const reasons = currentAnalysis.why_risky && currentAnalysis.why_risky.length > 0 ? `Key reasons: ${currentAnalysis.why_risky.join(', ')}.` : '';
+      return `Based on our n8n AI Agent scan, this request was flagged ${scoreText}as ${currentAnalysis.risk_level_label || currentAnalysis.overall_risk_level + ' RISK'}. ${reasons} Scammers often use these patterns to bypass personal verification.`;
     }
     return `Payment requests are usually flagged as risky due to mismatched UPI VPAs (Virtual Payment Addresses), urgent coercive language, unusual payment amounts deviating from normal patterns, or requests requiring you to enter a PIN to "receive" funds.`;
   }
@@ -26,9 +28,10 @@ export function generateGuardianChatReply(
       } else if (currentAnalysis.recommended_action === 'VERIFY') {
         return `⚠️ Caution: Please VERIFY before paying. Contact the receiver through an independent known phone number or official app first. Do not approve collect requests without double-checking.`;
       } else {
-        return `✅ The analysis indicates a LOW RISK (${currentAnalysis.risk_score}/100). However, always double-check the recipient name on your UPI app before entering your PIN.`;
+        return `✅ The analysis indicates ${currentAnalysis.risk_level_label || 'LOW RISK'}. However, always double-check the recipient name on your UPI app before entering your PIN.`;
       }
     }
+
     return `Before paying anyone unfamiliar: 1) Verify their identity via an independent channel, 2) Remember you NEVER need to enter your UPI PIN or scan a QR code to receive money, 3) If there is urgency or threats of disconnection/penalties, it is almost certainly a scam.`;
   }
 

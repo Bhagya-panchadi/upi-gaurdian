@@ -111,8 +111,11 @@ export const GuardianChatDrawer: React.FC<GuardianChatDrawerProps> = ({
                   ? 'bg-red-950 text-red-300 border border-red-800'
                   : 'bg-amber-950 text-amber-300 border border-amber-800'
               }`}>
-                {currentAnalysis.risk_score}/100
+                {currentAnalysis.risk_score !== null && currentAnalysis.risk_score !== undefined
+                  ? `${currentAnalysis.risk_score}/100`
+                  : currentAnalysis.risk_level_label}
               </span>
+
             </div>
           )}
 

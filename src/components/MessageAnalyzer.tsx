@@ -31,6 +31,7 @@ export const MessageAnalyzer: React.FC<MessageAnalyzerProps> = ({
     const extractedUpi = upiMatch ? upiMatch[0] : 'unknown.sender@upi';
 
     const payload: PaymentData = {
+      input: message.trim(),
       raw_message: message.trim(),
       payment_message: message.trim(),
       amount: extractedAmount || 10000,
